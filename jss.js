@@ -164,6 +164,9 @@ var jss = (function (undefined) {
         }
     };
     
+    jss._toCamelCase = function(prop) {
+		return prop.replace(/-([a-z])/gi, function(s, group1) {return group1.toUpperCase();});
+	};
     
     // Object structure for some code candy
     Jss = function () {};
@@ -186,7 +189,7 @@ var jss = (function (undefined) {
             }
 
             this.selector = selector;
-
+			
             return this;
         },
         add: function (prop, value) {
@@ -205,7 +208,8 @@ var jss = (function (undefined) {
         },
         set: function (prop, value) {
             var i,
-                rules;
+                rules,
+				propName;
 
             if (value === undefined) {
                 if (prop && typeof prop == 'object') {
@@ -216,9 +220,10 @@ var jss = (function (undefined) {
                 }
             } else {
                 rules = jss._getRules(this.sheets, this.selector);
+				propName = jss._toCamelCase(prop);
                 // Set properties for each rule
                 for (i = 0; i < rules.length; i++) {
-                    rules[i].style[prop] = value;
+                    rules[i].style[propName] = value;
                 }
             }
 
@@ -232,9 +237,11 @@ var jss = (function (undefined) {
                 j;
 
             if (prop !== undefined) {
+				propName = jss._toCamelCase(prop);
                 for (i = rules.length - 1; i >=0; i--) {
-                    if (rules[i].style[prop] != null) {
-                        result = rules[i].style[prop];
+					// added test for emtpy string to handle style selector defined more than once
+                    if (rules[i].style[propName] != null && rules[i].style[propName] != '') {
+                        result = rules[i].style[propName];
                         break;
                     }
                 }
@@ -242,12 +249,12 @@ var jss = (function (undefined) {
                 result = {};
                 for (i = 0; i < rules.length; i++) {
                     for (j = 0; j < rules[i].style.length; j++) {
-                        propName = rules[i].style[j];
-                        result[propName] = rules[i].style[propName];
+						propName = rules[i].style[j];
+						result[propName] = rules[i].style[propName];
                     }
                 }
             }
-
+			
             return result;
         },
         remove: function () {
